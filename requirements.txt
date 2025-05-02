@@ -1,0 +1,5 @@
+requests
+beautifulsoup4
+pandas
+undetected_chromedriver
+duckduckgo_search
