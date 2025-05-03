@@ -172,3 +172,6 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+athletics_sites.csv
+athletics_sites1.csv
+roster_output.csv

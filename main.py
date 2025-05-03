@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import time
 import undetected_chromedriver as uc
 from duckduckgo_search import DDGS
+import pandas as pd
+from html_parsers import scrape_roster
 
 def get_college_list(url: str = "https://www.ncsasports.org/mens-soccer/division-1-colleges"):
     """
@@ -51,7 +53,7 @@ def get_athletics_site_list():
     """
     try:
         print("Scraping athletics site list...")
-        with open("colleges.txt", "r") as f:
+        with open("error_list.txt", "r") as f:
             college_names = [line.strip() for line in f.readlines()]
     except:
         print("Error reading college names from colleges.txt. Please ensure the file exists.")
@@ -59,7 +61,7 @@ def get_athletics_site_list():
     
     college_athletics = {}
     for college_name in college_names:
-        query = f"{college_name} athletics soccer roster"
+        query = f"{college_name} men's athletics soccer roster"
         print(f"Searching for {college_name} athletics official site...")
         try:
             with DDGS() as ddgs:
@@ -75,32 +77,40 @@ def get_athletics_site_list():
         time.sleep(1)
         
     # Save the results to a file
-    with open("athletics_sites.txt", "w") as f:
+    with open("athletics_sites1.csv", "w") as f:
         for college, site in college_athletics.items():
-            f.write(f"{college}: {site}\n")
+            f.write(f"{college},{site}\n")
 
-def get_athletics():
+def get_athletics(roster_csv):
     """
     This function retrieves athletics data from the database.
     """
     # Code to retrieve athletics data goes here
-    pass
+     
+    df = pd.read_csv(roster_csv)
+    all_players = []
+    error_list = []
+    for _, row in df.iterrows():
+        print(f"\n------------------------------- {row['University']} ------------------------------")
+        players = scrape_roster(row['University'], row['Men Soccer Roster URL'])
+        if(players == []):
+            error_list.append(f"{row['University']},{row['Men Soccer Roster URL']}")
+            print(f"ScrapingError: {row['University']}")
+        else:
+            excel_df = pd.DataFrame(players)
 
-def get_athletics_by_college(college_id):
-    """
-    This function retrieves athletics data for a specific college from the database.
-    """
-    # Code to retrieve athletics data by college goes here
-    pass
-
-def get_athletics_by_college_and_sport(college_id, sport_id):
-    """
-    This function retrieves athletics data for a specific college and sport from the database.
-    """
-    # Code to retrieve athletics data by college and sport goes here
-    pass
+            # Write to Excel file with a specific sheet name
+            # , if_sheet_exists='replace'
+            
+            with pd.ExcelWriter('roster_output.xlsx', engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                excel_df.to_excel(writer, sheet_name=row['University'], index=False)
+        
+    with open("error_list.csv", "w") as f:
+        for errors in error_list:   
+            f.write(errors + "\n")        
+    # pd.DataFrame(all_players).to_csv('all_ncaa_rosters.csv', index=False)    
 
 if __name__ == "__main__":
     # get_college_list()
-    get_athletics_site_list()
-    # get_athletics()
+    # get_athletics_site_list()
+    get_athletics("athletics_sites.csv")
