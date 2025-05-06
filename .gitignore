@@ -181,3 +181,8 @@ error_list.txt
 error_list.csv
 roster_output_women_d1.xlsx
 colleges_women.txt
+
+
+*.csv
+*.xlsx
+*.txt
